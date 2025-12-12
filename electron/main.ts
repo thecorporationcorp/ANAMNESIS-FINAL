@@ -37,7 +37,9 @@ function createWindow() {
   // Dev vs production loading
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools({ mode: 'detach' })
+    // DevTools disabled for clean production experience
+    // Uncomment next line for debugging:
+    // mainWindow.webContents.openDevTools({ mode: 'detach' })
   } else {
     mainWindow.loadFile(join(__dirname, '../dist/index.html'))
   }
