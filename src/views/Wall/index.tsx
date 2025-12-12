@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useAppStore } from '@/stores/appStore'
 import { Monitor } from '@/components/Monitor'
 import { Search } from './Search'
@@ -10,38 +10,47 @@ import { generateGrid } from '@/systems/grid-layout'
 export function Wall() {
   const memories = useAppStore((state) => state.memories)
   const searchQuery = useAppStore((state) => state.searchQuery)
+  const setSearchResults = useAppStore((state) => state.setSearchResults)
+  const searchResults = useAppStore((state) => state.searchResults)
   const selectMemory = useAppStore((state) => state.selectMemory)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+
+  // Perform database search when query changes
+  useEffect(() => {
+    const performSearch = async () => {
+      if (!searchQuery.trim()) {
+        setSearchResults([])
+        return
+      }
+
+      try {
+        // Use FTS5 database search for production-grade performance
+        const results = await window.electronAPI?.db.searchMemories(searchQuery)
+        setSearchResults(results || [])
+      } catch (error) {
+        console.error('Search failed:', error)
+        setSearchResults([])
+      }
+    }
+
+    // Debounce search
+    const timer = setTimeout(performSearch, 150)
+    return () => clearTimeout(timer)
+  }, [searchQuery, setSearchResults])
+
+  // Determine which memories to display
+  const displayMemories = searchQuery.trim() ? searchResults : memories
 
   // Generate grid layout
   const grid = useMemo(
     () =>
-      generateGrid(memories, {
+      generateGrid(displayMemories, {
         columns: 'auto',
         aspectRatios: ['16:9', '4:3', '1:1', '9:16', '21:9'],
         density: 'ultra-high',
       }),
-    [memories]
+    [displayMemories]
   )
-
-  // Filter memories based on search
-  const filteredMemories = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return memories.map((m) => ({ ...m, matchesSearch: true }))
-    }
-
-    const query = searchQuery.toLowerCase()
-    return memories.map((m) => ({
-      ...m,
-      matchesSearch:
-        m.title.toLowerCase().includes(query) ||
-        m.conversation.toLowerCase().includes(query) ||
-        m.topic.toLowerCase().includes(query) ||
-        m.tags.some((t) => t.toLowerCase().includes(query)),
-    }))
-  }, [memories, searchQuery])
-
-  const matchCount = filteredMemories.filter((m) => m.matchesSearch).length
 
   const handleMonitorClick = useCallback(
     (memoryId: string) => {
@@ -66,12 +75,12 @@ export function Wall() {
           gridAutoRows: 'minmax(80px, 1fr)',
         }}
       >
-        {filteredMemories.map((memory, i) => (
+        {displayMemories.map((memory, i) => (
           <Monitor
             key={memory.id}
             memory={memory}
             layout={grid.layout[i]}
-            isHighlighted={memory.matchesSearch}
+            isHighlighted={true}
             isHovered={hoveredId === memory.id}
             onClick={() => handleMonitorClick(memory.id)}
             onHover={() => setHoveredId(memory.id)}
@@ -84,13 +93,32 @@ export function Wall() {
       <BladeRunnerEffects />
 
       {/* Search Bar */}
-      <Search resultsCount={matchCount} totalCount={memories.length} />
+      <Search
+        resultsCount={displayMemories.length}
+        totalCount={memories.length}
+      />
 
       {/* Stats Corner */}
       <Stats />
 
       {/* Ambient Glow */}
       <div className="fixed inset-0 pointer-events-none bg-gradient-radial from-cyber-cyan/5 via-transparent to-transparent opacity-50" />
+
+      {/* Empty State */}
+      {displayMemories.length === 0 && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
+          <div className="text-center">
+            <p className="text-cyber-cyan/40 font-mono text-lg mb-4">
+              {searchQuery.trim() ? 'No memories found' : 'No memories loaded'}
+            </p>
+            {!searchQuery.trim() && (
+              <p className="text-cyber-cyan/30 font-mono text-sm">
+                Import your chat history to get started
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </motion.div>
   )
 }

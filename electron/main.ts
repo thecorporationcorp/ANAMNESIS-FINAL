@@ -1,5 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
 import { join } from 'path'
+import { initDatabase, getMemories, searchMemories, getMemory, getStats } from './services/database'
+import { importExportFile } from './services/importer'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -53,6 +55,9 @@ function createWindow() {
 
 // App lifecycle
 app.whenReady().then(() => {
+  // Initialize database on startup
+  initDatabase()
+
   createWindow()
 
   app.on('activate', () => {
@@ -92,22 +97,62 @@ ipcMain.handle('window:isMaximized', () => {
 })
 
 // -----------------------------
-// IPC: Database placeholder handlers
+// IPC: Database handlers (PRODUCTION)
 // -----------------------------
-ipcMain.handle('db:getMemories', async () => {
-  return []
+ipcMain.handle('db:getMemories', async (_event, options) => {
+  try {
+    return getMemories(options)
+  } catch (error) {
+    console.error('Failed to get memories:', error)
+    return []
+  }
 })
 
 ipcMain.handle('db:searchMemories', async (_event, query) => {
-  return []
+  try {
+    return searchMemories(query)
+  } catch (error) {
+    console.error('Failed to search memories:', error)
+    return []
+  }
 })
 
 ipcMain.handle('db:getMemory', async (_event, id) => {
-  return null
+  try {
+    return getMemory(id)
+  } catch (error) {
+    console.error('Failed to get memory:', error)
+    return null
+  }
 })
 
 ipcMain.handle('db:importExport', async (_event, filePath) => {
-  return { success: false, message: 'Not implemented' }
+  try {
+    return await importExportFile(filePath)
+  } catch (error) {
+    console.error('Import failed:', error)
+    return {
+      success: false,
+      message: `Import failed: ${(error as Error).message}`,
+    }
+  }
+})
+
+// -----------------------------
+// IPC: Statistics
+// -----------------------------
+ipcMain.handle('db:getStats', async () => {
+  try {
+    return getStats()
+  } catch (error) {
+    console.error('Failed to get stats:', error)
+    return {
+      totalMemories: 0,
+      totalWords: 0,
+      platforms: {},
+      topTopics: [],
+    }
+  }
 })
 
 // -----------------------------

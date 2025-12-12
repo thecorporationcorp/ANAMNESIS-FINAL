@@ -3,7 +3,8 @@
   "version": "3.0.0",
   "description": "ANAMNESIS - The Mirror of Your Mind. A living visualization of your consciousness across AI conversations.",
   "main": "dist-electron/main.js",
-  "author": "ANAMNESIS",
+  "author": "THECORPORATIONCORP",
+  "homepage": "https://thecorporationcorp.com",
   "license": "MIT",
   "private": true,
   "scripts": {

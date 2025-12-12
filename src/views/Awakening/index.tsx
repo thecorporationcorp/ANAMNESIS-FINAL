@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useCallback } from 'react'
 import { useAppStore } from '@/stores/appStore'
-import { generateMockMemories } from '@/systems/mock-data'
 
 // Stage types
 type AwakeningStage =
@@ -19,58 +18,84 @@ export function Awakening() {
   const setView = useAppStore((state) => state.setView)
   const setMemories = useAppStore((state) => state.setMemories)
 
-  // Simulated import workflow
-  const handleImport = useCallback(async () => {
+  // Real import workflow with database integration
+  const handleImport = useCallback(async (filePath?: string) => {
     setStage('processing')
 
-    // Stage 1: Parsing
-    for (let i = 0; i <= 30; i++) {
-      await new Promise((r) => setTimeout(r, 30))
-      setProgress(i)
+    try {
+      // Stage 1: Parsing (0-30%)
+      for (let i = 0; i <= 30; i++) {
+        await new Promise((r) => setTimeout(r, 30))
+        setProgress(i)
+      }
+
+      // If file path provided, import it
+      if (filePath) {
+        const result = await window.electronAPI?.db.importExport(filePath)
+        if (!result?.success) {
+          console.error('Import failed:', result?.message)
+          alert(`Import failed: ${result?.message || 'Unknown error'}`)
+          setStage('prompt')
+          return
+        }
+      }
+
+      // Stage 2: Understanding (30-60%)
+      for (let i = 30; i <= 60; i++) {
+        await new Promise((r) => setTimeout(r, 25))
+        setProgress(i)
+      }
+
+      // Stage 3: Loading from database (60-90%)
+      for (let i = 60; i <= 90; i++) {
+        await new Promise((r) => setTimeout(r, 20))
+        setProgress(i)
+      }
+
+      // Load memories from database
+      const memories = await window.electronAPI?.db.getMemories({ limit: 1000 })
+      const memoryCount = memories?.length || 0
+
+      setMemories(memories || [])
+
+      // Stage 4: Awakening - Animate monitor multiplication
+      setStage('awakening')
+      for (let i = 0; i <= memoryCount; i += 5) {
+        await new Promise((r) => setTimeout(r, 10))
+        setMonitorCount(i)
+      }
+      setMonitorCount(memoryCount)
+
+      // Final progress (90-100%)
+      for (let i = 90; i <= 100; i++) {
+        await new Promise((r) => setTimeout(r, 50))
+        setProgress(i)
+      }
+
+      setStage('complete')
+
+      // Transition to wall
+      await new Promise((r) => setTimeout(r, 1000))
+      setView('wall')
+    } catch (error) {
+      console.error('Import error:', error)
+      alert('Import failed. Please try again.')
+      setStage('prompt')
     }
-
-    // Stage 2: Understanding
-    for (let i = 30; i <= 60; i++) {
-      await new Promise((r) => setTimeout(r, 25))
-      setProgress(i)
-    }
-
-    // Stage 3: Remembering
-    for (let i = 60; i <= 90; i++) {
-      await new Promise((r) => setTimeout(r, 20))
-      setProgress(i)
-    }
-
-    // Stage 4: Awakening
-    setStage('awakening')
-    const memories = generateMockMemories(200)
-    setMemories(memories)
-
-    // Animate monitor multiplication
-    for (let i = 0; i <= memories.length; i += 5) {
-      await new Promise((r) => setTimeout(r, 10))
-      setMonitorCount(i)
-    }
-    setMonitorCount(memories.length)
-
-    // Final progress
-    for (let i = 90; i <= 100; i++) {
-      await new Promise((r) => setTimeout(r, 50))
-      setProgress(i)
-    }
-
-    setStage('complete')
-
-    // Transition to wall
-    await new Promise((r) => setTimeout(r, 1000))
-    setView('wall')
   }, [setView, setMemories])
 
-  // Skip with demo data
-  const handleSkipDemo = useCallback(() => {
-    const memories = generateMockMemories(150)
-    setMemories(memories)
-    setView('wall')
+  // Skip to view existing data (or empty state)
+  const handleSkipDemo = useCallback(async () => {
+    try {
+      // Load existing memories from database
+      const existingMemories = await window.electronAPI?.db.getMemories({ limit: 1000 })
+      setMemories(existingMemories || [])
+      setView('wall')
+    } catch (error) {
+      console.error('Failed to load memories:', error)
+      setMemories([])
+      setView('wall')
+    }
   }, [setView, setMemories])
 
   return (
@@ -150,13 +175,13 @@ function IntroStage({ onComplete }: { onComplete: () => void }) {
 }
 
 /* --------------------------------------------------
-   PROMPT STAGE — DRAG & DROP FIX
+   PROMPT STAGE — PRODUCTION IMPORT
 -------------------------------------------------- */
 function PromptStage({
   onImport,
   onSkip,
 }: {
-  onImport: () => void
+  onImport: (filePath?: string) => Promise<void>
   onSkip: () => void
 }) {
   const [isDragging, setIsDragging] = useState(false)
@@ -171,15 +196,19 @@ function PromptStage({
     setIsDragging(false)
   }
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     setIsDragging(false)
-    onImport()
+
+    // In Electron, use the file browser for security
+    handleBrowse()
   }
 
   const handleBrowse = async () => {
     const filePath = await window.electronAPI?.file.selectExport()
-    if (filePath) onImport()
+    if (filePath) {
+      await onImport(filePath)
+    }
   }
 
   return (
@@ -238,7 +267,7 @@ function PromptStage({
         onClick={onSkip}
         className="mt-8 text-cyber-cyan/30 font-mono text-sm hover:text-cyber-cyan/60 transition-colors"
       >
-        [ EXPLORE WITH DEMO DATA ]
+        [ CONTINUE WITHOUT IMPORT ]
       </motion.button>
     </motion.div>
   )
