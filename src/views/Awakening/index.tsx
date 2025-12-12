@@ -81,7 +81,7 @@ export function Awakening() {
       className="fixed inset-0 bg-black flex items-center justify-center overflow-hidden"
     >
       {/* Background particle / monitor effect */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         {stage === 'awakening' && (
           <MonitorMultiplication count={monitorCount} />
         )}

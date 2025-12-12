@@ -52,7 +52,7 @@ export function Flicker({ interval = 4000 }: { interval?: number }) {
 }
 
 // Chromatic Aberration Effect
-export function ChromaticAberration({ intensity = 2 }: { intensity?: number }) {
+export function ChromaticAberration({ intensity: _intensity = 2 }: { intensity?: number }) {
   return (
     <motion.div
       className="absolute inset-0 pointer-events-none"
