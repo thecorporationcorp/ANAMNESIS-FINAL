@@ -1,5 +1,5 @@
 import { Memory, CollageLayout, HandwrittenNote, PhotoElement, TapePiece } from '@/types'
-import { extractTags, classifyTopic } from './text-extraction'
+// import { extractTags, classifyTopic } from './text-extraction'
 
 export function generateCollageLayout(memory: Memory): CollageLayout {
   // Parse conversation
@@ -197,7 +197,7 @@ function generateTapePieces(count: number): TapePiece[] {
     { x: 300, y: 700 },
   ]
 
-  return positions.slice(0, count).map((pos, i) => ({
+  return positions.slice(0, count).map((pos) => ({
     position: pos,
     rotation: randomInRange(0, 180),
     length: randomInRange(60, 100),

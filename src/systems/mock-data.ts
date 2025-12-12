@@ -1,6 +1,6 @@
 import { Memory, Platform } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
-import { classifyTopic, extractTags } from './text-extraction'
+// import { classifyTopic, extractTags } from './text-extraction'
 
 const SAMPLE_CONVERSATIONS = [
   {

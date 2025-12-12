@@ -89,7 +89,7 @@ interface WindowButtonProps {
   children: React.ReactNode
 }
 
-function WindowButton({ onClick, hoverColor, label, isClose, children }: WindowButtonProps) {
+function WindowButton({ onClick, hoverColor: _hoverColor, label, isClose, children }: WindowButtonProps) {
   return (
     <motion.button
       onClick={onClick}

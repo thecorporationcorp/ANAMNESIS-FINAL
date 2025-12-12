@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useMemo, memo } from 'react'
-import { Memory, MonitorLayout, MonitorStyle } from '@/types'
+import { Memory, MonitorLayout } from '@/types'
 import { Cartoon } from './Cartoon'
 import { Sitcom } from './Sitcom'
 import { Tutorial } from './Tutorial'
