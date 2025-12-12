@@ -1,0 +1,230 @@
+/* --------------------------------------------------
+   Import fonts — MUST be the first line
+-------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* --------------------------------------------------
+   Tailwind layers
+-------------------------------------------------- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --------------------------------------------------
+   Base Styles
+-------------------------------------------------- */
+@layer base {
+
+  * {
+    @apply box-border;
+  }
+
+  html, body {
+    @apply m-0 p-0 w-full h-full;
+    /* overflow-hidden REMOVED — this was breaking everything */
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 240, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 240, 255, 0.5);
+  }
+
+  /* Text selection */
+  ::selection {
+    background: rgba(0, 240, 255, 0.3);
+    color: white;
+  }
+}
+
+/* --------------------------------------------------
+   Component Styles
+-------------------------------------------------- */
+@layer components {
+
+  /* Blade Runner Search Input */
+  .search-input {
+    @apply bg-black/60 border border-cyber-cyan/40 rounded-lg px-4 py-3;
+    @apply text-cyber-cyan font-mono text-lg;
+    @apply placeholder:text-cyber-cyan/40;
+    @apply focus:outline-none focus:border-cyber-cyan focus:shadow-[0_0_20px_rgba(0,240,255,0.3)];
+    @apply transition-all duration-300;
+  }
+
+  /* Glass Morphism Panel */
+  .glass-panel {
+    @apply bg-black/40 backdrop-blur-md;
+    @apply border border-white/10 rounded-lg;
+    @apply shadow-[0_8px_32px_rgba(0,0,0,0.4)];
+  }
+
+  /* Cyberpunk Button */
+  .cyber-button {
+    @apply px-6 py-3 font-mono uppercase tracking-wider;
+    @apply bg-cyber-cyan/10 border border-cyber-cyan/50 text-cyber-cyan;
+    @apply hover:bg-cyber-cyan/20 hover:border-cyber-cyan hover:shadow-[0_0_20px_rgba(0,240,255,0.3)];
+    @apply active:scale-95 transition-all duration-200;
+  }
+
+  /* Vintage Button */
+  .vintage-button {
+    @apply px-6 py-3 font-mono bg-slate-800 text-white rounded;
+    @apply hover:bg-slate-700 active:scale-95 transition-all duration-200;
+  }
+
+  /* Monitor Frame */
+  .monitor-frame {
+    @apply relative overflow-hidden border-2 border-gray-800;
+    @apply shadow-[inset_0_0_20px_rgba(0,0,0,0.8)];
+  }
+
+  /* Typewriter Text */
+  .typewriter-text {
+    font-family: 'Courier Prime', 'Courier New', monospace;
+    @apply leading-relaxed whitespace-pre-wrap;
+  }
+
+  /* Handwritten Text */
+  .handwritten-text {
+    font-family: 'Dancing Script', cursive;
+    @apply text-lg leading-relaxed;
+  }
+}
+
+/* --------------------------------------------------
+   Utility Styles
+-------------------------------------------------- */
+@layer utilities {
+
+  /* CRT Scanline Effect */
+  .crt-effect {
+    @apply relative;
+  }
+  .crt-effect::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    z-index: 10;
+  }
+
+  /* Neon Glow Utility */
+  .neon-glow {
+    text-shadow:
+      0 0 5px currentColor,
+      0 0 10px currentColor,
+      0 0 20px currentColor,
+      0 0 40px currentColor;
+  }
+
+  /* Film Grain Overlay */
+  .film-grain {
+    @apply relative;
+  }
+  .film-grain::after {
+    content: '';
+    @apply absolute inset-0 pointer-events-none opacity-[0.03];
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    z-index: 100;
+  }
+
+  /* Frameless window drag regions */
+  .drag-region {
+    -webkit-app-region: drag;
+    app-region: drag;
+  }
+  .no-drag {
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+
+  /* Vintage Paper Texture */
+  .paper-texture {
+    background-color: #f5f1e8;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5'/%3E%3CfeDiffuseLighting lighting-color='%23f5f1e8' surfaceScale='2'%3E%3CfeDistantLight azimuth='45' elevation='60'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)'/%3E%3C/svg%3E");
+  }
+}
+
+/* --------------------------------------------------
+   Keyframe Animations
+-------------------------------------------------- */
+@keyframes monitor-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.8; }
+  94% { opacity: 1; }
+  97% { opacity: 0.9; }
+  98% { opacity: 1; }
+}
+
+@keyframes text-scroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.8;
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes chromatic-shift {
+  0%, 100% {
+    text-shadow: -2px 0 #ff00aa, 2px 0 #00f0ff;
+  }
+  25% {
+    text-shadow: -1px 0 #ff00aa, 1px 0 #00f0ff;
+  }
+  50% {
+    text-shadow: -3px 0 #ff00aa, 3px 0 #00f0ff;
+  }
+  75% {
+    text-shadow: -1px 0 #ff00aa, 1px 0 #00f0ff;
+  }
+}
+
+/* --------------------------------------------------
+   Animation Utility Classes
+-------------------------------------------------- */
+.animate-flicker {
+  animation: monitor-flicker 4s infinite;
+}
+
+.animate-text-scroll {
+  animation: text-scroll 20s linear infinite;
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+.animate-chromatic {
+  animation: chromatic-shift 0.5s ease-in-out infinite;
+}
