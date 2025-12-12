@@ -1,15 +1,6 @@
 import { motion } from 'framer-motion'
-import { useMemo } from 'react'
 import { useAppStore } from '@/stores/appStore'
-import { generateCollageLayout } from '@/systems/collage-generator'
-import {
-  TypewriterText,
-  HandwrittenNote,
-  Photo,
-  Tape,
-  Stamp,
-  Matchbook,
-} from '@/components/Collage'
+import { format } from 'date-fns'
 
 interface MemoryCollageProps {
   memoryId: string
@@ -20,203 +11,229 @@ export function MemoryCollage({ memoryId, onClose }: MemoryCollageProps) {
   const memories = useAppStore((state) => state.memories)
   const memory = memories.find((m) => m.id === memoryId)
 
-  const layout = useMemo(() => {
-    if (!memory) return null
-    return generateCollageLayout(memory)
-  }, [memory])
-
-  if (!memory || !layout) {
+  if (!memory) {
     return null
   }
 
-  const handleContinue = () => {
-    // Generate SPINE seed and open in new tab/window
-    console.log('Continue this memory:', memory.id)
-  }
+  // Parse conversation into messages
+  const lines = memory.conversation.split('\n').filter((l) => l.trim())
+  const messages = lines.map((line) => {
+    const isUser = line.startsWith('USER:') || line.startsWith('Human:')
+    const isAssistant = line.startsWith('ASSISTANT:') || line.startsWith('Assistant:')
 
-  const handleExport = () => {
-    // Export as SPINE seed file
-    console.log('Export SPINE for:', memory.id)
-  }
+    if (isUser) {
+      return {
+        role: 'user' as const,
+        content: line.replace(/^(USER:|Human:)\s*/, ''),
+      }
+    } else if (isAssistant) {
+      return {
+        role: 'assistant' as const,
+        content: line.replace(/^(ASSISTANT:|Assistant:)\s*/, ''),
+      }
+    }
+    return null
+  }).filter(Boolean) as Array<{ role: 'user' | 'assistant'; content: string }>
+
+  const wordCount = memory.conversation.split(/\s+/).length
+  const exchangeCount = Math.floor(messages.length / 2)
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.6 }}
-      className="fixed inset-0 z-50 overflow-auto"
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 z-50 overflow-hidden"
       onClick={onClose}
     >
-      {/* Vintage Paper Background */}
-      <div className="absolute inset-0 bg-vintage-cream paper-texture" />
+      {/* Futuristic Dark Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-black" />
 
-      {/* Subtle Vignette */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.1) 100%)',
-        }}
-      />
-
-      {/* Collage Content */}
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-        className="relative w-full min-h-screen p-12"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Main Conversation Text */}
-        <TypewriterText
-          text={memory.conversation}
-          position={layout.mainText.position}
-          width={layout.mainText.width}
-          rotation={layout.mainText.rotation}
-        />
-
-        {/* Handwritten Notes */}
-        {layout.notes.map((note, i) => (
-          <HandwrittenNote
-            key={`note-${i}`}
-            text={note.text}
-            position={note.position}
-            rotation={note.rotation}
-            color={note.color}
-          />
-        ))}
-
-        {/* Photos / Code Snippets */}
-        {layout.photos.map((photo, i) => (
-          <Photo
-            key={`photo-${i}`}
-            type={photo.type}
-            src={photo.src}
-            position={photo.position}
-            size={photo.size}
-            rotation={photo.rotation}
-          />
-        ))}
-
-        {/* Tape Pieces */}
-        {layout.tape.map((piece, i) => (
-          <Tape
-            key={`tape-${i}`}
-            position={piece.position}
-            rotation={piece.rotation}
-            length={piece.length}
-          />
-        ))}
-
-        {/* Date Stamp */}
-        <Stamp
-          text={new Date(memory.timestamp).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          })}
-          position={layout.dateStamp}
-          rotation={layout.dateStamp.rotation}
-        />
-
-        {/* Platform Label */}
-        <Matchbook text={memory.platform} position={layout.platformLabel} />
-
-        {/* Title */}
+      {/* Floating Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="absolute top-8 left-12"
-        >
-          <h1
-            className="text-vintage-ink font-script text-4xl"
-            style={{ transform: 'rotate(-2deg)' }}
-          >
-            {memory.title}
-          </h1>
-        </motion.div>
-
-        {/* Topic Tag */}
+          className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-gradient-to-br from-cyan-500/10 to-violet-500/10 blur-3xl"
+          animate={{
+            x: [0, 100, 0],
+            y: [0, -50, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="absolute top-8 right-12"
-        >
-          <span
-            className="
-              px-4 py-2 bg-vintage-sepia/30
-              text-vintage-brown font-mono text-sm
-              border border-vintage-brown/30 rounded
-            "
-            style={{ transform: 'rotate(1deg)' }}
-          >
-            {memory.topic}
-          </span>
-        </motion.div>
+          className="absolute top-1/2 right-1/4 w-80 h-80 rounded-full bg-gradient-to-br from-pink-500/8 to-orange-500/8 blur-3xl"
+          animate={{
+            x: [0, -80, 0],
+            y: [0, 60, 0],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 3,
+          }}
+        />
+        <motion.div
+          className="absolute bottom-1/3 left-1/2 w-72 h-72 rounded-full bg-gradient-to-br from-violet-500/12 to-cyan-500/8 blur-3xl"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, -30, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 22,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 7,
+          }}
+        />
+      </div>
 
-        {/* Tags */}
-        {memory.tags.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="absolute bottom-32 left-12 flex flex-wrap gap-2 max-w-xs"
-          >
-            {memory.tags.slice(0, 5).map((tag, i) => (
-              <span
-                key={tag}
-                className="
-                  px-2 py-1 text-xs font-mono
-                  bg-vintage-cream border border-vintage-brown/20
-                  text-vintage-brown/70
-                "
-                style={{ transform: `rotate(${(i - 2) * 2}deg)` }}
-              >
-                #{tag}
-              </span>
-            ))}
-          </motion.div>
-        )}
-      </motion.div>
-
-      {/* Action Buttons */}
+      {/* Content */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        className="fixed bottom-8 right-8 flex gap-4"
+        transition={{ delay: 0.2 }}
+        className="relative h-full flex flex-col"
+        onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={handleContinue} className="vintage-button">
-          Continue This
-        </button>
+        {/* Header */}
+        <div className="flex-none px-12 pt-12 pb-6">
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-4xl md:text-6xl font-light text-white mb-6 tracking-tight leading-tight"
+          >
+            {memory.title}
+          </motion.h1>
 
-        <button
-          onClick={handleExport}
-          className="vintage-button bg-cyber-cyan/90 hover:bg-cyber-cyan"
+          {/* Metadata Pills */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-wrap gap-3 mb-6"
+          >
+            <div className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10">
+              <span className="text-sm text-white/70 font-light">
+                {memory.platform}
+              </span>
+            </div>
+            <div className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10">
+              <span className="text-sm text-white/70 font-light">
+                {format(new Date(memory.timestamp), 'MMM d, yyyy')}
+              </span>
+            </div>
+            <div className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10">
+              <span className="text-sm text-white/70 font-light">
+                {wordCount.toLocaleString()} words
+              </span>
+            </div>
+            <div className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10">
+              <span className="text-sm text-white/70 font-light">
+                {exchangeCount} exchanges
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Topic & Tags */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-wrap gap-2"
+          >
+            <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-violet-500/20 border border-cyan-400/30">
+              <span className="text-sm text-cyan-200 font-light">{memory.topic}</span>
+            </div>
+            {memory.tags.slice(0, 6).map((tag) => (
+              <div
+                key={tag}
+                className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
+              >
+                <span className="text-xs text-white/50 font-light">#{tag}</span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Conversation */}
+        <div className="flex-1 overflow-y-auto px-12 pb-32 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, staggerChildren: 0.05 }}
+            className="space-y-6 max-w-4xl"
+          >
+            {messages.map((message, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: message.role === 'user' ? -20 : 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + i * 0.03 }}
+                className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
+              >
+                <div
+                  className={`
+                    max-w-3xl px-6 py-4 rounded-2xl
+                    ${
+                      message.role === 'user'
+                        ? 'bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-400/20'
+                        : 'bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-400/20'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span
+                      className={`text-xs font-medium tracking-wider uppercase ${
+                        message.role === 'user' ? 'text-cyan-300' : 'text-violet-300'
+                      }`}
+                    >
+                      {message.role}
+                    </span>
+                  </div>
+                  <p className="text-white/80 text-base leading-relaxed font-light whitespace-pre-wrap">
+                    {message.content}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Action Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="flex-none fixed bottom-0 left-0 right-0 px-12 py-6 bg-gradient-to-t from-black via-black/90 to-transparent backdrop-blur-xl"
         >
-          Export SPINE
-        </button>
+          <div className="flex justify-end gap-4">
+            <button
+              onClick={onClose}
+              className="px-8 py-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all duration-300 group"
+            >
+              <span className="text-white text-base font-light tracking-wider">CLOSE</span>
+            </button>
+          </div>
+        </motion.div>
 
-        <button
-          onClick={onClose}
-          className="vintage-button bg-slate-300 text-slate-800 hover:bg-slate-200"
+        {/* ESC hint */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="fixed bottom-6 left-12 text-white/30 text-sm font-light"
         >
-          Close
-        </button>
-      </motion.div>
-
-      {/* Close hint */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        className="fixed bottom-8 left-8 text-vintage-brown/40 font-mono text-xs"
-      >
-        Click outside or press ESC to close
+          Press ESC or click outside to close
+        </motion.div>
       </motion.div>
     </motion.div>
   )

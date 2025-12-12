@@ -7,7 +7,27 @@ let mainWindow: BrowserWindow | null = null
 
 const isDev = !app.isPackaged
 
+// Prevent multiple instances
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    // Someone tried to run a second instance, focus our window instead
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
+  })
+}
+
 function createWindow() {
+  // Prevent creating multiple windows
+  if (mainWindow) {
+    return
+  }
+
   mainWindow = new BrowserWindow({
     width: 1920,
     height: 1080,
@@ -21,7 +41,8 @@ function createWindow() {
       preload: join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false // Required for better-sqlite3
+      sandbox: false, // Required for better-sqlite3
+      devTools: false, // COMPLETELY DISABLE DEVTOOLS
     },
     show: false // Prevent white flash on startup
   })
@@ -34,12 +55,14 @@ function createWindow() {
     mainWindow?.show()
   })
 
+  // CRITICAL: Prevent ANY DevTools from opening
+  mainWindow.webContents.on('devtools-opened', () => {
+    mainWindow?.webContents.closeDevTools()
+  })
+
   // Dev vs production loading
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
-    // DevTools disabled for clean production experience
-    // Uncomment next line for debugging:
-    // mainWindow.webContents.openDevTools({ mode: 'detach' })
   } else {
     mainWindow.loadFile(join(__dirname, '../dist/index.html'))
   }
