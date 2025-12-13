@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
 import { join } from 'path'
 import { initDatabase, getMemories, searchMemories, getMemory, getStats } from './services/database'
-import { importExportFileBatched } from './services/importer-batched'
+import { importExportFileBatched } from './services/importer-bulletproof'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -58,6 +58,20 @@ function createWindow() {
   // CRITICAL: Prevent ANY DevTools from opening
   mainWindow.webContents.on('devtools-opened', () => {
     mainWindow?.webContents.closeDevTools()
+  })
+
+  // Block DevTools keyboard shortcuts
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+    if (
+      input.key === 'F12' ||
+      (input.control && input.shift && input.key === 'I') ||
+      (input.control && input.shift && input.key === 'J') ||
+      (input.control && input.shift && input.key === 'C') ||
+      (input.meta && input.alt && input.key === 'I') // Mac: Cmd+Option+I
+    ) {
+      event.preventDefault()
+    }
   })
 
   // Dev vs production loading
