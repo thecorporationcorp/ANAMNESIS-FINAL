@@ -199,6 +199,45 @@ export function insertManyMemories(memories: Memory[]): void {
   insertMany(memories)
 }
 
+// Batched insert for better performance during import
+export function insertMemoryBatch(memories: Memory[]): void {
+  const database = initDatabase()
+
+  const stmt = database.prepare(`
+    INSERT OR REPLACE INTO memories (
+      id, title, conversation, user_messages, assistant_messages,
+      timestamp, platform, topic, tags, word_count, turn_count,
+      duration, model, compressed, compression_ratio
+    ) VALUES (
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+    )
+  `)
+
+  const insertBatch = database.transaction((items: Memory[]) => {
+    for (const memory of items) {
+      stmt.run(
+        memory.id,
+        memory.title,
+        memory.conversation,
+        JSON.stringify(memory.userMessages),
+        JSON.stringify(memory.assistantMessages),
+        memory.timestamp.toISOString(),
+        memory.platform,
+        memory.topic,
+        JSON.stringify(memory.tags),
+        memory.metadata?.wordCount || 0,
+        memory.metadata?.turnCount || 0,
+        memory.metadata?.duration || null,
+        memory.metadata?.model || null,
+        memory.metadata?.compressed ? 1 : 0,
+        memory.metadata?.compressionRatio || null
+      )
+    }
+  })
+
+  insertBatch(memories)
+}
+
 export function deleteMemory(id: string): void {
   const database = initDatabase()
   database.prepare('DELETE FROM memories WHERE id = ?').run(id)

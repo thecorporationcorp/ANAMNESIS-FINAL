@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
 import { join } from 'path'
 import { initDatabase, getMemories, searchMemories, getMemory, getStats } from './services/database'
-import { importExportFile } from './services/importer'
+import { importExportFileBatched } from './services/importer-batched'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -153,7 +153,7 @@ ipcMain.handle('db:getMemory', async (_event, id) => {
 
 ipcMain.handle('db:importExport', async (_event, filePath) => {
   try {
-    return await importExportFile(filePath)
+    return await importExportFileBatched(filePath, mainWindow || undefined)
   } catch (error) {
     console.error('Import failed:', error)
     return {

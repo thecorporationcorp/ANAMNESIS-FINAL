@@ -31,6 +31,9 @@ export interface ElectronAPI {
       isDev: boolean
     }>
   }
+  onImportProgress: (
+    callback: (event: any, data: { percent: number; message: string }) => void
+  ) => () => void
 }
 
 declare global {

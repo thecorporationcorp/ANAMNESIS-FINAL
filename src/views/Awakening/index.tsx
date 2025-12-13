@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAppStore } from '@/stores/appStore'
 
 // Stage types
@@ -13,21 +13,31 @@ type AwakeningStage =
 export function Awakening() {
   const [stage, setStage] = useState<AwakeningStage>('intro')
   const [progress, setProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState('')
   const [monitorCount, setMonitorCount] = useState(0)
 
   const setView = useAppStore((state) => state.setView)
   const setMemories = useAppStore((state) => state.setMemories)
 
+  // Listen for import progress events
+  useEffect(() => {
+    const removeListener = window.electronAPI?.onImportProgress?.((_event, data) => {
+      setProgress(data.percent)
+      setProgressMessage(data.message)
+    })
+
+    return () => {
+      removeListener?.()
+    }
+  }, [])
+
   // Real import workflow with database integration
   const handleImport = useCallback(async (filePath?: string) => {
     setStage('processing')
+    setProgress(0)
+    setProgressMessage('Starting import...')
 
     try {
-      // Stage 1: Parsing (0-30%)
-      for (let i = 0; i <= 30; i++) {
-        await new Promise((r) => setTimeout(r, 30))
-        setProgress(i)
-      }
 
       // If file path provided, import it
       if (filePath) {
@@ -127,7 +137,7 @@ export function Awakening() {
         )}
 
         {stage === 'processing' && (
-          <ProcessingStage key="processing" progress={progress} />
+          <ProcessingStage key="processing" progress={progress} message={progressMessage} />
         )}
 
         {stage === 'awakening' && (
@@ -336,8 +346,9 @@ function PromptStage({
 /* --------------------------------------------------
    PROCESSING STAGE
 -------------------------------------------------- */
-function ProcessingStage({ progress }: { progress: number }) {
+function ProcessingStage({ progress, message }: { progress: number; message?: string }) {
   const getStatusText = () => {
+    if (message) return message
     if (progress < 30) return 'Parsing...'
     if (progress < 60) return 'Understanding...'
     if (progress < 90) return 'Remembering...'
@@ -351,7 +362,7 @@ function ProcessingStage({ progress }: { progress: number }) {
       exit={{ opacity: 0 }}
       className="text-center"
     >
-      <p className="text-white font-light text-3xl mb-8 tracking-wide">
+      <p className="text-white font-light text-2xl md:text-3xl mb-8 tracking-wide px-4">
         {getStatusText()}
       </p>
 
