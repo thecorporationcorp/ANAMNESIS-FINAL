@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs'
 import { v4 as uuidv4 } from 'uuid'
 import { Memory, Platform, ImportResult } from '../../src/types'
+import { insertMemoryBatch } from './database'
 import { BrowserWindow } from 'electron'
 
 const BATCH_SIZE = 50
@@ -62,7 +63,6 @@ async function insertMemoriesBatched(
   memories: Memory[],
   mainWindow?: BrowserWindow
 ): Promise<void> {
-  const { insertMemoryBatch } = await import('./database')
   const total = memories.length
 
   for (let i = 0; i < total; i += BATCH_SIZE) {
