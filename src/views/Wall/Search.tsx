@@ -41,12 +41,16 @@ export function Search({ resultsCount, totalCount }: SearchProps) {
     >
       <div
         className={`
-          relative glass-panel transition-all duration-300
-          ${isFocused ? 'shadow-[0_0_40px_rgba(0,240,255,0.2)]' : ''}
+          relative rounded-xl backdrop-blur-md transition-all duration-300
+          bg-white/95 border-2
+          ${isFocused
+            ? 'border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.4)]'
+            : 'border-white/30 shadow-xl'
+          }
         `}
       >
         {/* Search Icon */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-cyber-cyan/50">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-700">
           <svg
             className="w-5 h-5"
             fill="none"
@@ -73,10 +77,10 @@ export function Search({ resultsCount, totalCount }: SearchProps) {
           placeholder="Search your memories..."
           className="
             w-full bg-transparent py-4 pl-12 pr-32
-            text-cyber-cyan font-mono text-lg
-            placeholder:text-cyber-cyan/30
+            text-slate-900 font-light text-lg
+            placeholder:text-slate-400
             focus:outline-none
-            caret-cyber-cyan
+            caret-cyan-500
           "
           spellCheck={false}
           autoComplete="off"
@@ -90,9 +94,9 @@ export function Search({ resultsCount, totalCount }: SearchProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="text-cyber-cyan/30 font-mono text-xs"
+                className="text-slate-500 font-light text-xs"
               >
-                <kbd className="px-2 py-1 bg-cyber-cyan/10 rounded border border-cyber-cyan/20">
+                <kbd className="px-2 py-1 bg-slate-100 rounded border border-slate-300">
                   ⌘K
                 </kbd>
               </motion.span>
@@ -107,7 +111,7 @@ export function Search({ resultsCount, totalCount }: SearchProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 onClick={() => setSearchQuery('')}
-                className="text-cyber-cyan/50 hover:text-cyber-cyan transition-colors"
+                className="text-slate-500 hover:text-slate-700 transition-colors"
               >
                 <svg
                   className="w-5 h-5"
@@ -136,7 +140,7 @@ export function Search({ resultsCount, totalCount }: SearchProps) {
               exit={{ opacity: 0, y: -10 }}
               className="absolute -bottom-8 left-0 right-0 text-center"
             >
-              <span className="text-cyber-cyan/60 font-mono text-sm">
+              <span className="text-cyan-300 font-light text-sm drop-shadow-[0_0_6px_rgba(34,211,238,0.5)]">
                 {resultsCount} of {totalCount} memories match
               </span>
             </motion.div>
@@ -144,9 +148,9 @@ export function Search({ resultsCount, totalCount }: SearchProps) {
         </AnimatePresence>
       </div>
 
-      {/* Blade Runner Style Decorative Lines */}
-      <div className="absolute -left-8 top-1/2 w-8 h-px bg-gradient-to-l from-cyber-cyan/30 to-transparent" />
-      <div className="absolute -right-8 top-1/2 w-8 h-px bg-gradient-to-r from-cyber-cyan/30 to-transparent" />
+      {/* Cyberpunk Decorative Lines */}
+      <div className="absolute -left-8 top-1/2 w-8 h-px bg-gradient-to-l from-cyan-400/50 to-transparent" />
+      <div className="absolute -right-8 top-1/2 w-8 h-px bg-gradient-to-r from-cyan-400/50 to-transparent" />
     </motion.div>
   )
 }

@@ -110,6 +110,14 @@ export function getMemories(options?: {
 export function searchMemories(query: string): Memory[] {
   const database = initDatabase()
 
+  // Enhance query with wildcards for partial matching
+  // FTS5 requires special syntax: token* for prefix matching
+  const enhancedQuery = query
+    .trim()
+    .split(/\s+/)
+    .map(term => `${term}*`)
+    .join(' OR ')
+
   const searchQuery = `
     SELECT m.* FROM memories m
     JOIN memories_fts fts ON m.id = fts.id
@@ -118,7 +126,30 @@ export function searchMemories(query: string): Memory[] {
     LIMIT 100
   `
 
-  const rows = database.prepare(searchQuery).all(query) as any[]
+  try {
+    const rows = database.prepare(searchQuery).all(enhancedQuery) as any[]
+    return rows.map(rowToMemory)
+  } catch (error) {
+    console.error('FTS5 search failed:', error)
+    // Fallback to LIKE search if FTS5 fails
+    return fallbackSearch(query)
+  }
+}
+
+function fallbackSearch(query: string): Memory[] {
+  const database = initDatabase()
+
+  const searchQuery = `
+    SELECT * FROM memories
+    WHERE title LIKE ?
+       OR conversation LIKE ?
+       OR tags LIKE ?
+    ORDER BY timestamp DESC
+    LIMIT 100
+  `
+
+  const likeQuery = `%${query}%`
+  const rows = database.prepare(searchQuery).all(likeQuery, likeQuery, likeQuery) as any[]
   return rows.map(rowToMemory)
 }
 
