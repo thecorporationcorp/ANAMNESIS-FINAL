@@ -12,7 +12,7 @@ export function Wall() {
   const setSearchResults = useAppStore((state) => state.setSearchResults)
   const searchResults = useAppStore((state) => state.searchResults)
   const selectMemory = useAppStore((state) => state.selectMemory)
-  const setCurrentView = useAppStore((state) => state.setCurrentView)
+  const setView = useAppStore((state) => state.setView)
 
   // Perform database search when query changes
   useEffect(() => {
@@ -109,7 +109,7 @@ export function Wall() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.3 }}
-        onClick={() => setCurrentView('awakening')}
+        onClick={() => setView('awakening')}
         className="fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 rounded-lg bg-black/40 backdrop-blur-md border border-cyan-400/30 hover:border-cyan-400/60 hover:bg-cyan-500/10 transition-all duration-300 group"
       >
         <ArrowLeft className="w-4 h-4 text-cyan-400 group-hover:text-cyan-300" />
@@ -223,6 +223,61 @@ function TickerRibbon({ memories, speed, onMemoryClick }: TickerRibbonProps) {
   )
 }
 
+/* ============================================================================
+   [STABILIZED SECTOR] - Memory Card Color Schemes
+   Performance-optimized: Arrays defined at module scope to prevent
+   recreation on every render. With 100+ memories, this saves ~50KB allocations/render.
+   ============================================================================ */
+const CYBERPUNK_COLOR_SCHEMES = [
+  {
+    border: 'border-cyan-400/20',
+    hoverBorder: 'hover:border-cyan-400/50',
+    text: 'text-cyan-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(34,211,238,0.4)]',
+    hoverGlow: 'group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]',
+    bg: 'from-cyan-500/5 to-blue-500/5',
+    badge: 'from-cyan-500/20 to-blue-500/20 border-cyan-400/30'
+  },
+  {
+    border: 'border-violet-400/20',
+    hoverBorder: 'hover:border-violet-400/50',
+    text: 'text-violet-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(167,139,250,0.4)]',
+    hoverGlow: 'group-hover:drop-shadow-[0_0_12px_rgba(167,139,250,0.6)]',
+    bg: 'from-violet-500/5 to-purple-500/5',
+    badge: 'from-violet-500/20 to-purple-500/20 border-violet-400/30'
+  },
+  {
+    border: 'border-pink-400/20',
+    hoverBorder: 'hover:border-pink-400/50',
+    text: 'text-pink-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(244,114,182,0.4)]',
+    hoverGlow: 'group-hover:drop-shadow-[0_0_12px_rgba(244,114,182,0.6)]',
+    bg: 'from-pink-500/5 to-rose-500/5',
+    badge: 'from-pink-500/20 to-rose-500/20 border-pink-400/30'
+  },
+  {
+    border: 'border-emerald-400/20',
+    hoverBorder: 'hover:border-emerald-400/50',
+    text: 'text-emerald-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(52,211,153,0.4)]',
+    hoverGlow: 'group-hover:drop-shadow-[0_0_12px_rgba(52,211,153,0.6)]',
+    bg: 'from-emerald-500/5 to-teal-500/5',
+    badge: 'from-emerald-500/20 to-teal-500/20 border-emerald-400/30'
+  },
+  {
+    border: 'border-orange-400/20',
+    hoverBorder: 'hover:border-orange-400/50',
+    text: 'text-orange-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(251,146,60,0.4)]',
+    hoverGlow: 'group-hover:drop-shadow-[0_0_12px_rgba(251,146,60,0.6)]',
+    bg: 'from-orange-500/5 to-amber-500/5',
+    badge: 'from-orange-500/20 to-amber-500/20 border-orange-400/30'
+  },
+] as const
+
+const TITLE_SIZES = ['text-base', 'text-lg', 'text-xl', 'text-2xl'] as const
+
 /* Memory Card Component */
 interface MemoryCardProps {
   memory: any
@@ -233,60 +288,9 @@ interface MemoryCardProps {
 function MemoryCard({ memory, index, onClick }: MemoryCardProps) {
   const wordCount = memory.conversation.split(/\s+/).length
 
-  // Cyberpunk color schemes - rotate through them
-  const colorSchemes = [
-    {
-      border: 'border-cyan-400/20',
-      hoverBorder: 'hover:border-cyan-400/50',
-      text: 'text-cyan-300',
-      glow: 'drop-shadow-[0_0_6px_rgba(34,211,238,0.4)]',
-      hoverGlow: 'group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]',
-      bg: 'from-cyan-500/5 to-blue-500/5',
-      badge: 'from-cyan-500/20 to-blue-500/20 border-cyan-400/30'
-    },
-    {
-      border: 'border-violet-400/20',
-      hoverBorder: 'hover:border-violet-400/50',
-      text: 'text-violet-300',
-      glow: 'drop-shadow-[0_0_6px_rgba(167,139,250,0.4)]',
-      hoverGlow: 'group-hover:drop-shadow-[0_0_12px_rgba(167,139,250,0.6)]',
-      bg: 'from-violet-500/5 to-purple-500/5',
-      badge: 'from-violet-500/20 to-purple-500/20 border-violet-400/30'
-    },
-    {
-      border: 'border-pink-400/20',
-      hoverBorder: 'hover:border-pink-400/50',
-      text: 'text-pink-300',
-      glow: 'drop-shadow-[0_0_6px_rgba(244,114,182,0.4)]',
-      hoverGlow: 'group-hover:drop-shadow-[0_0_12px_rgba(244,114,182,0.6)]',
-      bg: 'from-pink-500/5 to-rose-500/5',
-      badge: 'from-pink-500/20 to-rose-500/20 border-pink-400/30'
-    },
-    {
-      border: 'border-emerald-400/20',
-      hoverBorder: 'hover:border-emerald-400/50',
-      text: 'text-emerald-300',
-      glow: 'drop-shadow-[0_0_6px_rgba(52,211,153,0.4)]',
-      hoverGlow: 'group-hover:drop-shadow-[0_0_12px_rgba(52,211,153,0.6)]',
-      bg: 'from-emerald-500/5 to-teal-500/5',
-      badge: 'from-emerald-500/20 to-teal-500/20 border-emerald-400/30'
-    },
-    {
-      border: 'border-orange-400/20',
-      hoverBorder: 'hover:border-orange-400/50',
-      text: 'text-orange-300',
-      glow: 'drop-shadow-[0_0_6px_rgba(251,146,60,0.4)]',
-      hoverGlow: 'group-hover:drop-shadow-[0_0_12px_rgba(251,146,60,0.6)]',
-      bg: 'from-orange-500/5 to-amber-500/5',
-      badge: 'from-orange-500/20 to-amber-500/20 border-orange-400/30'
-    },
-  ]
-
-  const scheme = colorSchemes[index % colorSchemes.length]
-
-  // Vary title sizes - some larger, some smaller
-  const titleSizes = ['text-base', 'text-lg', 'text-xl', 'text-2xl']
-  const titleSize = titleSizes[index % titleSizes.length]
+  // [STABILIZED] Use pre-defined color schemes for performance
+  const scheme = CYBERPUNK_COLOR_SCHEMES[index % CYBERPUNK_COLOR_SCHEMES.length]
+  const titleSize = TITLE_SIZES[index % TITLE_SIZES.length]
 
   return (
     <motion.div

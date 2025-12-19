@@ -107,16 +107,37 @@ export function getMemories(options?: {
   return rows.map(rowToMemory)
 }
 
+// ============================================================================
+// [STABILIZED SECTOR] - FTS5 Search with Query Sanitization
+// Why this approach is final:
+// 1. Escapes special FTS5 characters to prevent query crashes
+// 2. Wildcard support for partial matching (EMRY → EMRY*)
+// 3. Graceful fallback to LIKE search if FTS5 fails
+// 4. OR logic for multi-term searches
+// ============================================================================
 export function searchMemories(query: string): Memory[] {
   const database = initDatabase()
+
+  // Sanitize FTS5 query: escape special characters that crash FTS5
+  // FTS5 special chars: " * ( ) AND OR NOT
+  const sanitizeFTS5 = (term: string): string => {
+    return term
+      .replace(/"/g, '""')  // Escape quotes
+      .replace(/[*()]/g, '') // Remove special operators
+  }
 
   // Enhance query with wildcards for partial matching
   // FTS5 requires special syntax: token* for prefix matching
   const enhancedQuery = query
     .trim()
     .split(/\s+/)
-    .map(term => `${term}*`)
+    .filter(term => term.length > 0)
+    .map(term => `${sanitizeFTS5(term)}*`)
     .join(' OR ')
+
+  if (!enhancedQuery) {
+    return []
+  }
 
   const searchQuery = `
     SELECT m.* FROM memories m

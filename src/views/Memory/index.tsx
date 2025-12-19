@@ -237,7 +237,7 @@ export function MemoryCollage({ memoryId, onClose }: MemoryCollageProps) {
                       {message.role}
                     </span>
                   </div>
-                  <p className="text-white/80 text-base leading-relaxed font-light whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                  <p className="text-white/80 text-base leading-relaxed font-light whitespace-pre-wrap break-words">
                     {message.content}
                   </p>
                 </div>
