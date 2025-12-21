@@ -107,8 +107,37 @@ export function getMemories(options?: {
   return rows.map(rowToMemory)
 }
 
+// ============================================================================
+// [STABILIZED SECTOR] - FTS5 Search with Query Sanitization
+// Why this approach is final:
+// 1. Escapes special FTS5 characters to prevent query crashes
+// 2. Wildcard support for partial matching (EMRY → EMRY*)
+// 3. Graceful fallback to LIKE search if FTS5 fails
+// 4. OR logic for multi-term searches
+// ============================================================================
 export function searchMemories(query: string): Memory[] {
   const database = initDatabase()
+
+  // Sanitize FTS5 query: escape special characters that crash FTS5
+  // FTS5 special chars: " * ( ) AND OR NOT
+  const sanitizeFTS5 = (term: string): string => {
+    return term
+      .replace(/"/g, '""')  // Escape quotes
+      .replace(/[*()]/g, '') // Remove special operators
+  }
+
+  // Enhance query with wildcards for partial matching
+  // FTS5 requires special syntax: token* for prefix matching
+  const enhancedQuery = query
+    .trim()
+    .split(/\s+/)
+    .filter(term => term.length > 0)
+    .map(term => `${sanitizeFTS5(term)}*`)
+    .join(' OR ')
+
+  if (!enhancedQuery) {
+    return []
+  }
 
   const searchQuery = `
     SELECT m.* FROM memories m
@@ -118,7 +147,30 @@ export function searchMemories(query: string): Memory[] {
     LIMIT 100
   `
 
-  const rows = database.prepare(searchQuery).all(query) as any[]
+  try {
+    const rows = database.prepare(searchQuery).all(enhancedQuery) as any[]
+    return rows.map(rowToMemory)
+  } catch (error) {
+    console.error('FTS5 search failed:', error)
+    // Fallback to LIKE search if FTS5 fails
+    return fallbackSearch(query)
+  }
+}
+
+function fallbackSearch(query: string): Memory[] {
+  const database = initDatabase()
+
+  const searchQuery = `
+    SELECT * FROM memories
+    WHERE title LIKE ?
+       OR conversation LIKE ?
+       OR tags LIKE ?
+    ORDER BY timestamp DESC
+    LIMIT 100
+  `
+
+  const likeQuery = `%${query}%`
+  const rows = database.prepare(searchQuery).all(likeQuery, likeQuery, likeQuery) as any[]
   return rows.map(rowToMemory)
 }
 
@@ -197,6 +249,45 @@ export function insertManyMemories(memories: Memory[]): void {
   })
 
   insertMany(memories)
+}
+
+// Batched insert for better performance during import
+export function insertMemoryBatch(memories: Memory[]): void {
+  const database = initDatabase()
+
+  const stmt = database.prepare(`
+    INSERT OR REPLACE INTO memories (
+      id, title, conversation, user_messages, assistant_messages,
+      timestamp, platform, topic, tags, word_count, turn_count,
+      duration, model, compressed, compression_ratio
+    ) VALUES (
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+    )
+  `)
+
+  const insertBatch = database.transaction((items: Memory[]) => {
+    for (const memory of items) {
+      stmt.run(
+        memory.id,
+        memory.title,
+        memory.conversation,
+        JSON.stringify(memory.userMessages),
+        JSON.stringify(memory.assistantMessages),
+        memory.timestamp.toISOString(),
+        memory.platform,
+        memory.topic,
+        JSON.stringify(memory.tags),
+        memory.metadata?.wordCount || 0,
+        memory.metadata?.turnCount || 0,
+        memory.metadata?.duration || null,
+        memory.metadata?.model || null,
+        memory.metadata?.compressed ? 1 : 0,
+        memory.metadata?.compressionRatio || null
+      )
+    }
+  })
+
+  insertBatch(memories)
 }
 
 export function deleteMemory(id: string): void {

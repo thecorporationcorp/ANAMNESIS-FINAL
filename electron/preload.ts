@@ -31,6 +31,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // App info
   app: {
     getInfo: () => ipcRenderer.invoke('app:getInfo')
+  },
+
+  // Import progress events
+  onImportProgress: (callback: (event: any, data: { percent: number; message: string }) => void) => {
+    ipcRenderer.on('import:progress', callback)
+    return () => ipcRenderer.removeListener('import:progress', callback)
   }
 })
 
@@ -59,6 +65,7 @@ export interface ElectronAPI {
       isDev: boolean
     }>
   }
+  onImportProgress: (callback: (event: any, data: { percent: number; message: string }) => void) => () => void
 }
 
 interface Memory {

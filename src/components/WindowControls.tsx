@@ -26,11 +26,15 @@ export function WindowControls() {
   return (
     <div className="fixed top-0 left-0 right-0 h-10 z-[9999] flex items-center justify-between drag-region">
       {/* App Title */}
-      <div className="px-4 flex items-center gap-2">
+      <div className="px-4 flex items-center gap-3">
         <span className="text-cyber-cyan/60 font-mono text-sm tracking-[0.3em] uppercase">
           Anamnesis
         </span>
         <span className="text-cyber-cyan/30 font-mono text-xs">v3.0</span>
+        <span className="text-cyber-cyan/20 font-mono text-xs">|</span>
+        <span className="text-cyber-cyan/40 font-mono text-xs tracking-wider">
+          THECORPORATIONCORP
+        </span>
       </div>
 
       {/* Window Controls */}
@@ -85,7 +89,7 @@ interface WindowButtonProps {
   children: React.ReactNode
 }
 
-function WindowButton({ onClick, hoverColor, label, isClose, children }: WindowButtonProps) {
+function WindowButton({ onClick, hoverColor: _hoverColor, label, isClose, children }: WindowButtonProps) {
   return (
     <motion.button
       onClick={onClick}

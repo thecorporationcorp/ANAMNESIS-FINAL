@@ -8,7 +8,7 @@ interface StaticProps {
   style: MonitorStyle
 }
 
-export function Static({ text, style }: StaticProps) {
+export function Static({ text, style: _style }: StaticProps) {
   // Generate static noise pattern
   const noiseLines = useMemo(
     () =>

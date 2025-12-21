@@ -90,11 +90,11 @@ function calculateSpan(
 
 export function optimizeGridLayout(
   layouts: MonitorLayout[],
-  viewportWidth: number,
-  viewportHeight: number
+  _viewportWidth: number,
+  _viewportHeight: number
 ): MonitorLayout[] {
   // Dynamic optimization based on viewport
-  const scaleFactor = Math.min(viewportWidth / 1920, viewportHeight / 1080)
+  // const scaleFactor = Math.min(_viewportWidth / 1920, _viewportHeight / 1080)
 
   return layouts.map((layout) => ({
     ...layout,

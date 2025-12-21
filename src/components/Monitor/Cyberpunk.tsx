@@ -7,7 +7,7 @@ interface CyberpunkProps {
   style: MonitorStyle
 }
 
-export function Cyberpunk({ text, style }: CyberpunkProps) {
+export function Cyberpunk({ text, style: _style }: CyberpunkProps) {
   const term = text.terms[0] || text.phrases[0]?.slice(0, 20) || 'SYSTEM'
 
   return (

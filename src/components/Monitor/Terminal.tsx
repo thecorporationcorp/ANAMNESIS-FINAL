@@ -7,7 +7,7 @@ interface TerminalProps {
   style: MonitorStyle
 }
 
-export function Terminal({ text, style }: TerminalProps) {
+export function Terminal({ text, style: _style }: TerminalProps) {
   const terms = text.terms.slice(0, 8)
   const command = text.commands[0] || text.phrases[0] || '> system ready'
 

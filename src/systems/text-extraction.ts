@@ -1,4 +1,4 @@
-import { Memory, ExtractedText, Platform } from '@/types'
+import { Memory, ExtractedText } from '@/types'
 
 export function extractUserText(memory: Memory): ExtractedText {
   const messages = memory.userMessages || []

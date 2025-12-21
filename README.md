@@ -7,6 +7,8 @@
 ![React](https://img.shields.io/badge/react-18-blue)
 ![TypeScript](https://img.shields.io/badge/typescript-5-blue)
 
+**Developed by [THECORPORATIONCORP](https://thecorporationcorp.com)**
+
 ---
 
 ## The Vision

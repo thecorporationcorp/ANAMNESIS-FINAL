@@ -7,7 +7,7 @@ interface EmergencyProps {
   style: MonitorStyle
 }
 
-export function Emergency({ text, style }: EmergencyProps) {
+export function Emergency({ text, style: _style }: EmergencyProps) {
   const breakthrough = text.breakthroughs[0] || text.phrases[0] || 'ALERT'
 
   return (

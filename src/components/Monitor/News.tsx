@@ -8,7 +8,7 @@ interface NewsProps {
   style: MonitorStyle
 }
 
-export function News({ text, style }: NewsProps) {
+export function News({ text, style: _style }: NewsProps) {
   const headline = text.phrases[0] || 'Breaking News'
   const subheadline = text.phrases[1] || text.questions[0] || 'Story developing...'
 

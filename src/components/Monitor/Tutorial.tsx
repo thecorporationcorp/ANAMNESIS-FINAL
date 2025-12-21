@@ -7,7 +7,7 @@ interface TutorialProps {
   style: MonitorStyle
 }
 
-export function Tutorial({ text, style }: TutorialProps) {
+export function Tutorial({ text, style: _style }: TutorialProps) {
   const command = text.commands[0] || text.phrases[0] || 'Step 1...'
 
   return (

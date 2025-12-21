@@ -270,7 +270,7 @@ export function useCollage(memoryId: string) {
 /**
  * Generate a real SPINE seed using the backend engine
  */
-async function generateRealSpineSeed(memory: Memory): string {
+async function generateRealSpineSeed(memory: Memory): Promise<string> {
   // This would call the Electron backend SPINE service
   // For now, use the enhanced frontend version
 

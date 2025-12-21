@@ -1,11 +1,33 @@
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
 import { join } from 'path'
+import { initDatabase, getMemories, searchMemories, getMemory, getStats } from './services/database'
+import { importExportFileBatched } from './services/importer-bulletproof'
 
 let mainWindow: BrowserWindow | null = null
 
 const isDev = !app.isPackaged
 
+// Prevent multiple instances
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    // Someone tried to run a second instance, focus our window instead
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
+  })
+}
+
 function createWindow() {
+  // Prevent creating multiple windows
+  if (mainWindow) {
+    return
+  }
+
   mainWindow = new BrowserWindow({
     width: 1920,
     height: 1080,
@@ -19,7 +41,8 @@ function createWindow() {
       preload: join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false // Required for better-sqlite3
+      sandbox: false, // Required for better-sqlite3
+      devTools: false, // COMPLETELY DISABLE DEVTOOLS
     },
     show: false // Prevent white flash on startup
   })
@@ -32,10 +55,28 @@ function createWindow() {
     mainWindow?.show()
   })
 
+  // CRITICAL: Prevent ANY DevTools from opening
+  mainWindow.webContents.on('devtools-opened', () => {
+    mainWindow?.webContents.closeDevTools()
+  })
+
+  // Block DevTools keyboard shortcuts
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+    if (
+      input.key === 'F12' ||
+      (input.control && input.shift && input.key === 'I') ||
+      (input.control && input.shift && input.key === 'J') ||
+      (input.control && input.shift && input.key === 'C') ||
+      (input.meta && input.alt && input.key === 'I') // Mac: Cmd+Option+I
+    ) {
+      event.preventDefault()
+    }
+  })
+
   // Dev vs production loading
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools({ mode: 'detach' })
   } else {
     mainWindow.loadFile(join(__dirname, '../dist/index.html'))
   }
@@ -53,6 +94,9 @@ function createWindow() {
 
 // App lifecycle
 app.whenReady().then(() => {
+  // Initialize database on startup
+  initDatabase()
+
   createWindow()
 
   app.on('activate', () => {
@@ -92,22 +136,62 @@ ipcMain.handle('window:isMaximized', () => {
 })
 
 // -----------------------------
-// IPC: Database placeholder handlers
+// IPC: Database handlers (PRODUCTION)
 // -----------------------------
-ipcMain.handle('db:getMemories', async () => {
-  return []
+ipcMain.handle('db:getMemories', async (_event, options) => {
+  try {
+    return getMemories(options)
+  } catch (error) {
+    console.error('Failed to get memories:', error)
+    return []
+  }
 })
 
 ipcMain.handle('db:searchMemories', async (_event, query) => {
-  return []
+  try {
+    return searchMemories(query)
+  } catch (error) {
+    console.error('Failed to search memories:', error)
+    return []
+  }
 })
 
 ipcMain.handle('db:getMemory', async (_event, id) => {
-  return null
+  try {
+    return getMemory(id)
+  } catch (error) {
+    console.error('Failed to get memory:', error)
+    return null
+  }
 })
 
 ipcMain.handle('db:importExport', async (_event, filePath) => {
-  return { success: false, message: 'Not implemented' }
+  try {
+    return await importExportFileBatched(filePath, mainWindow || undefined)
+  } catch (error) {
+    console.error('Import failed:', error)
+    return {
+      success: false,
+      message: `Import failed: ${(error as Error).message}`,
+    }
+  }
+})
+
+// -----------------------------
+// IPC: Statistics
+// -----------------------------
+ipcMain.handle('db:getStats', async () => {
+  try {
+    return getStats()
+  } catch (error) {
+    console.error('Failed to get stats:', error)
+    return {
+      totalMemories: 0,
+      totalWords: 0,
+      platforms: {},
+      topTopics: [],
+    }
+  }
 })
 
 // -----------------------------
